@@ -11,7 +11,7 @@ from utils import coerce_iterable
 
 def run_example(func, *args, **kwargs):
     now = pd.Timestamp.now()
-    print(f'== Test {func.__name__} ==')
+    print(f'== Example {func.__name__} ==')
     res = func(*args, **kwargs)
     elapsed = pd.Timestamp.now() - now
     print(f'Elapsed: {elapsed}')
