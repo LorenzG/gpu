@@ -125,6 +125,8 @@ def on_gpu(*gpu_args, **gpu_kwargs):
                 res = func(*f_args, **f_kwargs)
             if gpu_kwargs.pop('persist_cudf', False) is not True:
                 res = process_output(res)
+            else:
+                print('Persisting objects on GPU')
             return res
         wrapper.__name__ = func.__name__
         return wrapper
