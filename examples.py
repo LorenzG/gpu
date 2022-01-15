@@ -35,7 +35,7 @@ def dataframes_in_and_out(df1: pd.DataFrame, df2: pd.DataFrame) -> Tuple[float, 
 @on_gpu
 def many_operations(df: pd.DataFrame, loops: int) -> float:
     res = df
-    for loop in range(loops):
+    for _ in range(loops):
         res *= 3
         res -= df + df + df
 
@@ -45,7 +45,8 @@ def many_operations(df: pd.DataFrame, loops: int) -> float:
 
 @on_gpu
 def db_operations(df: pd.DataFrame, groups, filters) -> float:
-    mask = np.sum([df[filter] == 0 for filter in filters], axis=0) == 0
+    masks = np.array([df[filter] == 0 for filter in filters])
+    mask = np.sum(masks, axis=0) == 0
     df = df[mask]
     df = df.drop(filters, axis=1)
     return df.groupby(groups).sum()
@@ -67,12 +68,6 @@ if __name__ == '__main__':
         run_example(dataframes_in_and_out, df1, df2)
 
     ## 2
-    big_df = pd.DataFrame({f'col_{i}':range(100000) for i in range(1000)})
-    run_example(many_operations, big_df, 100)
-    with gpus(False):
-        run_example(many_operations, big_df, 100)
-
-    ## 3
     big_df1 = pd.DataFrame({
         f'col_{i}': [random.choice(range(10)) for _ in range(10000)]
         for i in range(1000)
@@ -90,3 +85,10 @@ if __name__ == '__main__':
             [f'col_{i}' for i in range(50)],
             [f'col_{i}' for i in range(100, 200)],
         )
+
+    ## 3
+    big_df = pd.DataFrame({f'col_{i}':range(100000) for i in range(1000)})
+    run_example(many_operations, big_df, 100)
+    with gpus(False):
+        run_example(many_operations, big_df, 100)
+   
