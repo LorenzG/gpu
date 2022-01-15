@@ -123,7 +123,7 @@ def on_gpu(*gpu_args, **gpu_kwargs):
                 for mgr in _create_patches(func):
                     stack.enter_context(mgr)
                 res = func(*f_args, **f_kwargs)
-            if gpu_kwargs.pop('persist_cudf', False) is not True:
+            if gpu_kwargs.get('persist_cudf', False) is not True:
                 res = process_output(res)
             else:
                 print('Persisting objects on GPU')
