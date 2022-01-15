@@ -107,7 +107,7 @@ def _create_patches(func):
         yield patch(f'{module_name}.pandas', cudf)
 
 
-def on_gpu(**gpu_kwargs):
+def on_gpu(*gpu_args, **gpu_kwargs):
     """
         persist_cudf (default=False):
             If `True` it will keep the output as cupy/cudf
@@ -128,4 +128,11 @@ def on_gpu(**gpu_kwargs):
             return res
         wrapper.__name__ = func.__name__
         return wrapper
-    return decorator
+
+    if len(gpu_args) == 1 and callable(gpu_args[0]):
+        # No arguments, this is the decorator
+        # Set default values for the arguments
+        return decorator(gpu_args[0])
+    else:
+        # This is just returning the decorator
+        return decorator
