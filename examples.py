@@ -31,7 +31,7 @@ def dataframes_in_and_out(df1: pd.DataFrame, df2: pd.DataFrame) -> Tuple[float, 
 @on_gpu
 def many_operations(df: pd.DataFrame, loops: int) -> float:
     res = df
-    for loop in loops:
+    for loop in range(loops):
         res *= 3
         res -= df + df + df
 
