@@ -18,7 +18,8 @@ def run_example(func, *args, **kwargs):
     res = func(*args, **kwargs)
     elapsed = pd.Timestamp.now() - now
     print(f'Elapsed: {elapsed}')
-    for i,r in enumerate(coerce_iterable(res)):
+    res = coerce_iterable(res)
+    for i,r in enumerate(res):
         print(f'Out {i}, type: {type(r)}:')
         print(r)
         print('')
