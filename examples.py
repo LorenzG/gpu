@@ -45,8 +45,14 @@ def many_operations(df: pd.DataFrame, loops: int) -> float:
 
 @on_gpu
 def db_operations(df: pd.DataFrame, groups, filters) -> float:
-    masks = np.array([(df[filter] == 0).values for filter in filters])
-    mask = np.sum(masks, axis=0) == 0
+    masks = [(df[filter] == 0).values for filter in filters]
+    # we can't easily mix cupy and cudf: https://stackoverflow.com/a/61667071
+    # masks = np.array(masks)
+    # mask = np.sum(masks, axis=0) == 0
+    def agg_masks(acc, x):
+        acc &= x
+        return acc
+    mask = accumulate(masks, agg_masks)
     df = df[mask]
     df = df.drop(filters, axis=1)
     return df.groupby(groups).sum()
