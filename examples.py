@@ -3,7 +3,7 @@ from typing import Tuple
 import pandas as pd
 import numpy as np
 
-from decorators import on_gpu
+from decorators import on_gpu, gpus
 
 
 
@@ -53,6 +53,11 @@ if __name__ == '__main__':
 
     big_df = pd.DataFrame({f'col_{i}':range(100000) for i in range(1000)})
 
-    run_example(dataframes_in_and_out, df1, df2)
 
-    run_example(many_operations, big_df, 1000)
+    run_example(dataframes_in_and_out, df1, df2)
+    with gpus(False):
+        run_example(dataframes_in_and_out, df1, df2)
+
+    run_example(many_operations, big_df, 100)
+    with gpus(False):
+        run_example(many_operations, big_df, 100)

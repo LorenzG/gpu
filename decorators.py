@@ -1,5 +1,6 @@
 import os
 from functools import wraps, partial
+from contextlib import contextmanager
 from typing import Any, Tuple
 
 import pandas as pd
@@ -8,9 +9,23 @@ import cudf
 
 __USE_GPUS = True
 
-def use_gpus(use_gpus=True):
-    print('USing GPUs')
+def set_gpus(use_gpus=True):
+    if use_gpus:
+        print('GPUs ON')
+    else:
+        print('GPUs OFF')
+    global __USE_GPUS
     __USE_GPUS = use_gpus
+
+
+@contextmanager
+def gpus(activate_gpus=True):
+    previous_state = __USE_GPUS
+    set_gpus(activate_gpus)
+    try:
+        yield None
+    finally:
+        set_gpus(previous_state)
 
 
 def pd_to_cudf(pd_item: Tuple[pd.DataFrame, pd.Series]):
