@@ -29,12 +29,15 @@ def gpus(activate_gpus=True):
 
 
 def pd_to_cudf(pd_item: Tuple[pd.DataFrame, pd.Series]):
+    out = None
     if isinstance(pd_item, pd.DataFrame):
-        return cudf.DataFrame.from_pandas(pd_item)
+        out = cudf.DataFrame.from_pandas(pd_item)
     elif isinstance(pd_item, pd.Series):
-        return cudf.Series.from_pandas(pd_item)
+        out = cudf.Series.from_pandas(pd_item)
     else:
         raise ValueError(f'Type {type(pd_item)} not supported.')
+    print('Transformed pandas to cudf.')
+    return out
 
 
 def cudf_to_pd(pd_item: Tuple[cudf.DataFrame, cudf.Series]):
@@ -61,7 +64,7 @@ def try_cudf_to_pd(maybe_cu_object):
 
 
 def apply_to_nested_in_iterable(iterable):
-    pass
+    raise NotImplemented()
 
 
 def process_output(output: Any):
@@ -72,7 +75,7 @@ def process_output(output: Any):
     elif isinstance(output, dict):
         return {k:try_cudf_to_pd(r) for k,r in output.items()}
     else:
-        return output
+        return try_cudf_to_pd(output)
 
 
 def on_gpu(func, persist_cudf=False):
