@@ -45,8 +45,16 @@ def many_operations(df: pd.DataFrame, loops: int) -> float:
 
 @on_gpu
 def db_operations(df: pd.DataFrame, groups, filters) -> float:
-    masks = np.array([df[filter] == 0 for filter in filters])
+    print(f'df={type(df)}')
+    print(f'groups={type(groups)}')
+    print(f'filters={type(filters)}')
+    aa = df[filters[0]] == 0
+    print(f'aa={type(aa)}')
+
+    masks = np.array([df[f] == 0 for f in filters])
+    print(f'masks={type(masks)}')
     mask = np.sum(masks, axis=0) == 0
+    print(f'mask={type(mask)}')
     df = df[mask]
     df = df.drop(filters, axis=1)
     return df.groupby(groups).sum()
@@ -69,7 +77,7 @@ if __name__ == '__main__':
 
     ## 2
     big_df1 = pd.DataFrame({
-        f'col_{i}': [random.choice(range(10)) for _ in range(10000)]
+        f'col_{i}': [random.choice(range(10)) for _ in range(100)]
         for i in range(1000)
     })
     run_example(
