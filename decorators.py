@@ -108,9 +108,11 @@ def _create_patches(func):
 
 
 def on_gpu(persist_cudf=False):
+    func_name = None
     def decorator(func):
+        func_name = func.__name_
         @wraps(func)
-        def inner(*args, **kwargs):
+        def wrapper(*args, **kwargs):
             if __USE_GPUS:
                 args = [try_pd_to_cudf(arg) for arg in args]
                 kwargs = {k:try_pd_to_cudf(v) for k,v in kwargs.items()}
@@ -121,6 +123,7 @@ def on_gpu(persist_cudf=False):
             if not persist_cudf:
                 res = process_output(res)
             return res
-        inner.__name__ = func.__name__
-        return inner
+        wrapper.__name__ = func_name
+        return wrapper
+    decorator.__name__ = func_name
     return decorator
