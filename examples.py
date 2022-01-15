@@ -51,6 +51,8 @@ if __name__ == '__main__':
         'b': np.arange(5) * 1000,
     })
 
+    big_df = pd.DataFrame({f'col_{i}':range(100000) for i in range(1000)})
+
     run_example(dataframes_in_and_out, df1, df2)
 
-    run_example(many_operations, 1000)
+    run_example(many_operations, big_df, 1000)
