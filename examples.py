@@ -90,7 +90,7 @@ if __name__ == '__main__':
 
     ## 3
     big_df = pd.DataFrame({f'col_{i}':range(100000) for i in range(1000)})
-    run_example(persist(big_df, 100))
+    run_example(persist, big_df, 100)
     with gpus(False):
         run_example(persist, big_df, 100)
 
