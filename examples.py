@@ -3,7 +3,7 @@ from typing import Tuple
 import pandas as pd
 import numpy as np
 
-from test.gpu.decorators import on_gpu
+from decorators import on_gpu
 
 
 @on_gpu
