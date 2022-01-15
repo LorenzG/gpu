@@ -94,12 +94,16 @@ def _create_patches(func):
     module_name = func_module.__name__
     module_source = inspect.getsource(func_module)
     if 'import numpy as np' in module_source:
+        print('Patching np')
         yield patch(f'{module_name}.np', cupy)
     if 'import numpy\n' in module_source:
+        print('Patching numpy')
         yield patch(f'{module_name}.numpy', cupy)
     if 'import pandas as pd' in module_source:
+        print('Patching pd')
         yield patch(f'{module_name}.pd', cudf)
     if 'import pandas\n' in module_source:
+        print('Patching pandas')
         yield patch(f'{module_name}.pandas', cudf)
 
 
