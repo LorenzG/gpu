@@ -58,6 +58,21 @@ def db_operations(df: pd.DataFrame, groups, filters) -> float:
     return df.groupby(groups).sum()
 
 
+@on_gpu(persist_cudf=True)
+def persist_1(df: pd.DataFrame) -> pd.DataFrame:
+    res = df
+    res *= 3
+    res -= df + df + df
+    return df
+
+
+def persist(df, loops):
+    df1 = persist_1(df)
+    for _ in range(loops):
+        df1 = persist_1(df1)
+    return (df - df1).abs().sum().sum()
+
+
 if __name__ == '__main__':
 
     ## 1
@@ -73,15 +88,21 @@ if __name__ == '__main__':
     with gpus(False):
         run_example(dataframes_in_and_out, df1, df2)
 
+    ## 3
+    big_df = pd.DataFrame({f'col_{i}':range(100000) for i in range(1000)})
+    run_example(persist(big_df, 100))
+    with gpus(False):
+        run_example(persist, big_df, 100)
+
     ## 2
     big_df1 = pd.DataFrame({
-        f'col_{i}': [random.choice(range(10)) for _ in range(10000)]
+        f'col_{i}': [random.choice(range(2)) for _ in range(100000)]
         for i in range(1000)
     })
     run_example(
         db_operations,
         big_df1,
-        [f'col_{i}' for i in range(50)],
+        [f'col_{i}' for i in range(10)],
         [f'col_{i}' for i in range(100, 200)],
     )
     with gpus(False):
@@ -92,7 +113,7 @@ if __name__ == '__main__':
             [f'col_{i}' for i in range(100, 200)],
         )
 
-    ## 3
+    ## 4
     big_df = pd.DataFrame({f'col_{i}':range(100000) for i in range(1000)})
     run_example(many_operations, big_df, 100)
     with gpus(False):
