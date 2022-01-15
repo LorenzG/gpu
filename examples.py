@@ -90,4 +90,3 @@ if __name__ == '__main__':
             [f'col_{i}' for i in range(50)],
             [f'col_{i}' for i in range(100, 200)],
         )
-        

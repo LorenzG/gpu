@@ -1,10 +1,14 @@
 import os
 from functools import wraps, partial
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 from typing import Any, Tuple
+from mock import patch
+import inspect
 
 import pandas as pd
+import numpy as np
 import cudf
+import cupy
 
 
 __USE_GPUS = True
@@ -28,26 +32,30 @@ def gpus(activate_gpus=True):
         set_gpus(previous_state)
 
 
-def pd_to_cudf(pd_item: Tuple[pd.DataFrame, pd.Series]):
+def pd_to_cudf(cpu_obj: Tuple[pd.DataFrame, pd.Series]):
     out = None
-    if isinstance(pd_item, pd.DataFrame):
-        out = cudf.DataFrame.from_pandas(pd_item)
-    elif isinstance(pd_item, pd.Series):
-        out = cudf.Series.from_pandas(pd_item)
+    if isinstance(cpu_obj, pd.DataFrame):
+        out = cudf.DataFrame.from_pandas(cpu_obj)
+    elif isinstance(cpu_obj, pd.Series):
+        out = cudf.Series.from_pandas(cpu_obj)
+    elif isinstance(cpu_obj, np.ndarray):
+        out = cupy.asarray(cpu_obj)
     else:
-        raise ValueError(f'Type {type(pd_item)} not supported.')
+        raise ValueError(f'Type {type(cpu_obj)} not supported.')
     print('Transformed pandas to cudf.')
     return out
 
 
-def cudf_to_pd(pd_item: Tuple[cudf.DataFrame, cudf.Series]):
+def cudf_to_pd(gpu_obj: Tuple[cudf.DataFrame, cudf.Series]):
     out = None
-    if isinstance(pd_item, cudf.DataFrame):
-        out = pd_item.to_pandas()
-    elif isinstance(pd_item, cudf.Series):
-        out = pd_item.to_pandas()
+    if isinstance(gpu_obj, cudf.DataFrame):
+        out = gpu_obj.to_pandas()
+    elif isinstance(gpu_obj, cudf.Series):
+        out = gpu_obj.to_pandas()
+    elif isinstance(gpu_obj, cudf.ndarray):
+        out = cupy.asnumpy(gpu_obj)
     else:
-        raise ValueError(f'Type {type(pd_item)} not supported.')
+        raise ValueError(f'Type {type(gpu_obj)} not supported.')
     print('Transformed cudf to pandas.')
     return out
 
@@ -81,13 +89,29 @@ def process_output(output: Any):
         return try_cudf_to_pd(output)
 
 
+def _create_patches(func):
+    module_name = inspect.getmodule(func).__name__
+    module_source = inspect.getsource(module_name)
+    if 'import numpy as np' in module_source:
+        yield patch(f'{module_name}.np', cupy)
+    if 'import numpy\n' in module_source:
+        yield patch(f'{module_name}.numpy', cupy)
+    if 'import pandas as pd' in module_source:
+        yield patch(f'{module_name}.pd', cudf)
+    if 'import pandas\n' in module_source:
+        yield patch(f'{module_name}.pandas', cudf)
+
+
 def on_gpu(func, persist_cudf=False):
     @wraps(func)
     def inner(*args, **kwargs):
         if __USE_GPUS:
             args = [try_pd_to_cudf(arg) for arg in args]
             kwargs = {k:try_pd_to_cudf(v) for k,v in kwargs.items()}
-        res = func(*args, **kwargs)
+        with ExitStack() as stack:
+            for mgr in _create_patches(func):
+                stack.enter_context(mgr)
+            res = func(*args, **kwargs)
         if not persist_cudf:
             res = process_output(res)
         return res
