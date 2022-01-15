@@ -107,18 +107,20 @@ def _create_patches(func):
         yield patch(f'{module_name}.pandas', cudf)
 
 
-def on_gpu(func, persist_cudf=False):
-    @wraps(func)
-    def inner(*args, **kwargs):
-        if __USE_GPUS:
-            args = [try_pd_to_cudf(arg) for arg in args]
-            kwargs = {k:try_pd_to_cudf(v) for k,v in kwargs.items()}
-        with ExitStack() as stack:
-            for mgr in _create_patches(func):
-                stack.enter_context(mgr)
-            res = func(*args, **kwargs)
-        if not persist_cudf:
-            res = process_output(res)
-        return res
-    inner.__name__ = func.__name__
-    return inner
+def on_gpu(persist_cudf=False):
+    def decorator(func):
+        @wraps(func)
+        def inner(*args, **kwargs):
+            if __USE_GPUS:
+                args = [try_pd_to_cudf(arg) for arg in args]
+                kwargs = {k:try_pd_to_cudf(v) for k,v in kwargs.items()}
+            with ExitStack() as stack:
+                for mgr in _create_patches(func):
+                    stack.enter_context(mgr)
+                res = func(*args, **kwargs)
+            if not persist_cudf:
+                res = process_output(res)
+            return res
+        inner.__name__ = func.__name__
+        return inner
+    return decorator
