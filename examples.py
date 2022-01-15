@@ -1,5 +1,6 @@
 from typing import Tuple
 from itertools import accumulate
+import random
 
 import pandas as pd
 import numpy as np
@@ -7,7 +8,7 @@ import numpy as np
 from decorators import on_gpu, gpus
 from utils import coerce_iterable
 
-
+random.seed(0)
 
 def run_example(func, *args, **kwargs):
     now = pd.Timestamp.now()
@@ -44,8 +45,9 @@ def many_operations(df: pd.DataFrame, loops: int) -> float:
 
 @on_gpu
 def db_operations(df: pd.DataFrame, groups, filters) -> float:
-    mask = accumulate([df[filter] == 1 for filter in filters], lambda x,y: x&y)
+    mask = np.sum([df[filter] == 0 for filter in filters], axis=0) == 0
     df = df[mask]
+    df = df.drop(filters, axis=1)
     return df.groupby(groups).sum()
 
 
@@ -71,7 +73,10 @@ if __name__ == '__main__':
         run_example(many_operations, big_df, 100)
 
     ## 3
-    big_df1 = pd.DataFrame({f'col_{i}':[1] * 10000 for i in range(1000)})
+    big_df1 = pd.DataFrame({
+        f'col_{i}': [random.choice(range(10)) for _ in range(10000)]
+        for i in range(1000)
+    })
     run_example(
         db_operations,
         big_df1,
