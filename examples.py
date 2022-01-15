@@ -11,9 +11,10 @@ from utils import coerce_iterable
 
 def run_example(func, *args, **kwargs):
     now = pd.Timestamp.now()
+    print(f'== Test {func.__name__} ==')
     res = func(*args, **kwargs)
     elapsed = pd.Timestamp.now() - now
-    print(f'== Test {func.__name__} - elapsed: {elapsed} ==')
+    print(f'Elapsed: {elapsed}')
     for i,r in enumerate(coerce_iterable(res)):
         print(f'Out {i}, type: {type(r)}:')
         print(r)
