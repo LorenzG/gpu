@@ -41,12 +41,15 @@ def pd_to_cudf(pd_item: Tuple[pd.DataFrame, pd.Series]):
 
 
 def cudf_to_pd(pd_item: Tuple[cudf.DataFrame, cudf.Series]):
+    out = None
     if isinstance(pd_item, cudf.DataFrame):
-        return pd_item.to_pandas()
+        out = pd_item.to_pandas()
     elif isinstance(pd_item, cudf.Series):
-        return pd_item.to_pandas()
+        out = pd_item.to_pandas()
     else:
         raise ValueError(f'Type {type(pd_item)} not supported.')
+    print('Transformed cudf to pandas.')
+    return out
 
 
 def try_pd_to_cudf(maybe_pd_object):
