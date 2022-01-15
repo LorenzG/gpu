@@ -1,5 +1,7 @@
+from ast import operator
 from typing import Tuple
 from itertools import accumulate
+from functools import reduce
 import random
 
 import pandas as pd
@@ -49,10 +51,7 @@ def db_operations(df: pd.DataFrame, groups, filters) -> float:
     # we can't easily mix cupy and cudf: https://stackoverflow.com/a/61667071
     # masks = np.array(masks)
     # mask = np.sum(masks, axis=0) == 0
-    def agg_masks(acc, x):
-        acc &= x
-        return acc
-    mask = accumulate(masks, agg_masks)
+    mask = reduce(lambda acc,x: acc & x, masks)
     df = df[mask]
     df = df.drop(filters, axis=1)
     return df.groupby(groups).sum()
