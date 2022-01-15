@@ -108,9 +108,7 @@ def _create_patches(func):
 
 
 def on_gpu(persist_cudf=False):
-    func_name = None
     def decorator(func):
-        func_name = func.__name_
         @wraps(func)
         def wrapper(*args, **kwargs):
             if __USE_GPUS:
@@ -123,7 +121,6 @@ def on_gpu(persist_cudf=False):
             if not persist_cudf:
                 res = process_output(res)
             return res
-        wrapper.__name__ = func_name
+        wrapper.__name__ = func.__name__
         return wrapper
-    decorator.__name__ = func_name
     return decorator
