@@ -107,18 +107,23 @@ def _create_patches(func):
         yield patch(f'{module_name}.pandas', cudf)
 
 
-def on_gpu(persist_cudf=False):
+def on_gpu(**gpu_kwargs):
+    """
+        persist_cudf (default=False):
+            If `True` it will keep the output as cupy/cudf
+            objects, thus keeping the data on the GPU memory
+    """
     def decorator(func):
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*f_args, **f_kwargs):
             if __USE_GPUS:
-                args = [try_pd_to_cudf(arg) for arg in args]
-                kwargs = {k:try_pd_to_cudf(v) for k,v in kwargs.items()}
+                f_args = [try_pd_to_cudf(arg) for arg in f_args]
+                f_kwargs = {k:try_pd_to_cudf(v) for k,v in f_kwargs.items()}
             with ExitStack() as stack:
                 for mgr in _create_patches(func):
                     stack.enter_context(mgr)
-                res = func(*args, **kwargs)
-            if not persist_cudf:
+                res = func(*f_args, **f_kwargs)
+            if gpu_kwargs.pop('persist_cudf', False) is not True:
                 res = process_output(res)
             return res
         wrapper.__name__ = func.__name__
