@@ -1,8 +1,16 @@
+import os
 from functools import wraps, partial
-from typing import Tuple
+from typing import Any, Tuple
 
 import pandas as pd
 import cudf
+
+
+__USE_GPUS = True
+
+def use_gpus(use_gpus=True):
+    print('USing GPUs')
+    __USE_GPUS = use_gpus
 
 
 def pd_to_cudf(pd_item: Tuple[pd.DataFrame, pd.Series]):
@@ -41,14 +49,26 @@ def apply_to_nested_in_iterable(iterable):
     pass
 
 
-def on_gpu(func):
+def process_output(output: Any):
+    if isinstance(output, list):
+        return [try_cudf_to_pd(r) for r in output]
+    elif isinstance(output, tuple):
+        return tuple(try_cudf_to_pd(r) for r in output)
+    elif isinstance(output, dict):
+        return {k:try_cudf_to_pd(r) for k,r in output.items()}
+    else:
+        return output
+
+
+def on_gpu(func, persist_cudf=False):
     @wraps(func)
     def inner(*args, **kwargs):
-        # chunksize = 3
-        args_with_cudf = [try_pd_to_cudf(arg) for arg in args]
-        kwargs_with_cudf = {k:try_pd_to_cudf(v) for k,v in kwargs.items()}
-        res = func(*args_with_cudf, **kwargs_with_cudf)
-        res = [try_cudf_to_pd(r) for r in res]
+        if __USE_GPUS:
+            args = [try_pd_to_cudf(arg) for arg in args]
+            kwargs = {k:try_pd_to_cudf(v) for k,v in kwargs.items()}
+        res = func(*args, **kwargs)
+        if not persist_cudf:
+            res = process_output(res)
         return res
     inner.__name__ = func.__name__
     return inner
