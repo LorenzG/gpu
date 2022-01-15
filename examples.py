@@ -50,8 +50,11 @@ def db_operations(df: pd.DataFrame, groups, filters) -> float:
     print(f'filters={type(filters)}')
     aa = df[filters[0]] == 0
     print(f'aa={type(aa)}')
-
-    masks = np.array([df[f] == 0 for f in filters])
+    print(df.dtypes)
+    aaa = [df[f] == 0 for f in filters]
+    print(f'aaa={type(aaa)}')
+    print(f'aaa={type(aaa[0])}')
+    masks = np.array(aaa)
     print(f'masks={type(masks)}')
     mask = np.sum(masks, axis=0) == 0
     print(f'mask={type(mask)}')
