@@ -90,8 +90,9 @@ def process_output(output: Any):
 
 
 def _create_patches(func):
-    module_name = inspect.getmodule(func).__name__
-    module_source = inspect.getsource(module_name)
+    func_module = inspect.getmodule(func)
+    module_name = func_module.__name__
+    module_source = inspect.getsource(func_module)
     if 'import numpy as np' in module_source:
         yield patch(f'{module_name}.np', cupy)
     if 'import numpy\n' in module_source:
