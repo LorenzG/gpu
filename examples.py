@@ -66,6 +66,7 @@ def persist_1(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+@on_gpu
 def persist(df, loops):
     df1 = persist_1(df)
     for _ in range(loops):
