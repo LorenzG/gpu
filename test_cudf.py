@@ -30,13 +30,15 @@ def timeit(*args):
 
 def grid_search(ctor, op, *op_args, **op_kargs):
     res = {}
-    for n_rows in np.logspace(1, 8, 5):
+    for n_rows in np.logspace(1, 7, 5):
         for n_cols in np.logspace(1, 5, 5):
-            data = np.random.rand(n_rows, n_cols) + 2.
-            with timeit() as ctor_time:
+            n_rows = int(n_rows)
+            n_cols = int(n_cols)
+            data = np.random.rand(n_rows, n_cols) + 1.
+            with timeit(n_rows, n_cols, 'ctor') as ctor_time:
                 d = ctor(data)
             res[(n_rows, n_cols, 'ctor')] = ctor_time.elapsed
-            with timeit() as op_time:
+            with timeit(n_rows, n_cols, 'op') as op_time:
                 op(d, *op_args, **op_kargs)
             res[(n_rows, n_cols, 'op')] = op_time.elapsed
     return res
